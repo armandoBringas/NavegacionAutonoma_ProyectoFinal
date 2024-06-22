@@ -222,7 +222,7 @@ if __name__ == "__main__":
     # El parámetro 'safe_mode' se establece en False, lo que significa que el modelo se carga incluso
     # si se guardó con una versión superior de Keras. El parámetro 'compile' se establece en False,
     # lo que significa que el modelo se carga sin su estado compilado.
-    model = load_model('gear_fifth.keras', safe_mode=False, compile=False)
+    model = load_model('../models/gear_fifth.keras', safe_mode=False, compile=False)
 
     # Compilar el modelo con el optimizador Adam y una tasa de aprendizaje de 0.001.
     # La función de pérdida se establece en 'mse' (error cuadrático medio).
