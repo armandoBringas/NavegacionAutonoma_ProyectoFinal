@@ -16,7 +16,7 @@ NavegacionAutonoma_ProyectoFinal/
 │   └── images.csv
 │
 ├── models/
-│   └── gear_fifth.keras
+│   └── behavioral_cloning_training.keras
 │
 ├── notebooks/
 │   └── behavioral_cloning_training.ipynb
