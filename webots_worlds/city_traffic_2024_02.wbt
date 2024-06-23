@@ -124,10 +124,11 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.12377211482942142 0.12011311398064933 -0.9850143671239137 1.6158882661193357
-  position -232.98517181573487 35.24388960418698 2.5651103851861556
+  orientation 0.12781566361386412 0.10407445885261071 -0.986322291722885 1.628349160724432
+  position -230.22502413256905 39.73286887401384 3.669684776410739
   near 1
   follow "vehicle:camera"
+  followType "Mounted Shot"
   lensFlare LensFlare {
   }
 }
@@ -140,8 +141,12 @@ Fog {
   visibilityRange 1200
 }
 SumoInterface {
-  gui FALSE
-  maxVehicles 35
+  enableTrafficLights FALSE
+  maxVehicles 30
+  maximumLateralSpeed 20
+  maximumAngularSpeed 20
+  laneChangeDelay 0
+  seed 128
 }
 DEF GROUND Solid {
   boundingObject DEF GROUND_PLANE Plane {

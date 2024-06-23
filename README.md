@@ -1,7 +1,8 @@
 
-# Navegacion Autonoma Proyecto Final
+# Navegación Autónoma Proyecto Final
 
-Este proyecto tiene como objetivo desarrollar un sistema de navegación autónoma utilizando clonación de comportamiento y datos de sensores. El repositorio está organizado de la siguiente manera:
+Este proyecto tiene como objetivo desarrollar un sistema de navegación autónoma utilizando clonación de comportamiento y datos de sensores. 
+El repositorio está organizado de la siguiente manera:
 
 ## Estructura del Proyecto
 
@@ -23,11 +24,12 @@ NavegacionAutonoma_ProyectoFinal/
 │
 ├── scripts/
 │   ├── behavioral_cloning_and_sensors_driving.py
-│   ├── behavioral_cloning_driving.py
 │   ├── capture_controller_input.py
 │   └── create_report.py
+│   
 │
 ├── webots_worlds/
+│   ├── city_traffic_2024_02_net/
 │   ├── city_traffic_2024_01.wbt
 │   └── city_traffic_2024_02.wbt
 │
@@ -52,11 +54,11 @@ NavegacionAutonoma_ProyectoFinal/
 
 - **scripts/**: Contiene scripts de Python.
   - **behavioral_cloning_and_sensors_driving.py**: Script combinado para clonación de comportamiento y conducción con datos de sensores.
-  - **behavioral_cloning_driving.py**: Script para conducir utilizando el modelo de clonación de comportamiento.
   - **capture_controller_input.py**: Script para capturar datos de entrada.
   - **create_report.py**: Script para crear informes.
 
 - **webots_worlds/**: Contiene mundos de simulación de Webots.
+- - **city_traffic_2024_02_nets/**: Directorio con las configuraciones de SUMO.
   - **city_traffic_2024_01.wbt**: Archivo del mundo de Webots para el escenario de tráfico de la ciudad 01.
   - **city_traffic_2024_02.wbt**: Archivo del mundo de Webots para el escenario de tráfico de la ciudad 02.
 
@@ -77,7 +79,15 @@ Active el entorno:
 conda activate your_environment_name
 ```
 
-## Uso
+## Secuencia de Uso
+
+### Captura de Datos de Entrada
+
+Para capturar datos de entrada, ejecute:
+
+```bash
+python scripts/capture_controller_input.py
+```
 
 ### Entrenamiento del Modelo
 
@@ -92,16 +102,9 @@ jupyter notebook notebooks/behavioral_cloning_training.ipynb
 Para conducir usando el modelo de clonación de comportamiento entrenado, ejecute:
 
 ```bash
-python scripts/behavioral_cloning_driving.py
+python scripts/behavioral_cloning_and_sensors_driving.py
 ```
 
-### Captura de Datos de Entrada
-
-Para capturar datos de entrada, ejecute:
-
-```bash
-python scripts/capture_controller_input.py
-```
 
 ## Simulaciones de Webots
 
