@@ -124,10 +124,10 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.30725549857865364 -0.6223237550616338 0.71993555439301 5.0797823333598116
-  position -252.05705584434398 53.37064661491257 33.52547314052266
+  orientation 0.12377211482942142 0.12011311398064933 -0.9850143671239137 1.6158882661193357
+  position -232.98517181573487 35.24388960418698 2.5651103851861556
   near 1
-  follow "vehicle"
+  follow "vehicle:camera"
   lensFlare LensFlare {
   }
 }
@@ -912,7 +912,7 @@ DEF WEBOTS_VEHICLE0 BmwX5 {
     }
     Lidar {
       horizontalResolution 250
-      fieldOfView 0.1
+      fieldOfView 0.3
       numberOfLayers 1
       maxRange 10
     }
@@ -1936,11 +1936,11 @@ HouseWithGarage {
   translation -150.36 192.51 0
 }
 Pedestrian {
-  translation -243 -20 1.27
+  translation -235 15.38 1.27
   name "Luffy"
   controllerArgs [
-    "--speed=2.7"
-    "--trajectory= -243 -20, -219 -20"
+    "--speed=1.5"
+    "--trajectory= -235 15.4, -218 15.4"
   ]
   rightLegAngle 0.3381818181818198
   rightLowerLegAngle 0.2136363636363649
