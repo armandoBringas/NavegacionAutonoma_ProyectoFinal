@@ -9,7 +9,7 @@ from vehicle import Car, Driver
 
 # Constants
 THRESHOLD_DISTANCE_CAR = 5.0  # Threshold distance for car detection in meters
-CAR_SPEED = 10  # Speed in km/h when no object is detected or safe distance from car
+CAR_SPEED = 25  # Speed in km/h when no object is detected or safe distance from car
 USE_CONTROLLER = False  # Option to enable or disable the use of video game controller
 
 
