@@ -4,12 +4,14 @@ import numpy as np
 import cv2
 from datetime import datetime
 import pygame
-from controller import Robot, Camera, GPS, LidarPoint
+from controller import Robot, Camera, GPS
 from vehicle import Car, Driver
+from keras.models import load_model
+from keras.optimizers import Adam
 
 # Constants
 THRESHOLD_DISTANCE_CAR = 5.0  # Threshold distance for car detection in meters
-CAR_SPEED = 25  # Speed in km/h when no object is detected or safe distance from car
+CAR_SPEED = 40  # Speed in km/h when no object is detected or safe distance from car
 USE_CONTROLLER = False  # Option to enable or disable the use of video game controller
 
 
@@ -36,6 +38,8 @@ class Controller:
 
 
 class CarEngine:
+    MAX_ANGLE = 0.28
+
     def __init__(self):
         self.robot = Car()
         self.driver = Driver()
@@ -44,8 +48,9 @@ class CarEngine:
         self.front_camera = self._init_camera_recognition("Front Camera")
         self.gps = self._initialize_device("gps")
         self.lidar = self._init_lidar("lidar")
+        self.display = self.robot.getDevice("display")
         self.angle = 0.0
-        self.speed = 0.0
+        self.speed = 25.0
 
     def _initialize_device(self, device_name):
         device = self.robot.getDevice(device_name)
@@ -53,10 +58,10 @@ class CarEngine:
         return device
 
     def _init_camera_recognition(self, device_name):
-        camara = self.robot.getDevice(device_name)
-        camara.enable(self.timestep)
-        camara.recognitionEnable(self.timestep)
-        return camara
+        camera = self.robot.getDevice(device_name)
+        camera.enable(self.timestep)
+        camera.recognitionEnable(self.timestep)
+        return camera
 
     def _init_lidar(self, device_name):
         lidar = self.robot.getDevice(device_name)
@@ -64,37 +69,46 @@ class CarEngine:
         lidar.enablePointCloud()
         return lidar
 
-    def set_steering_angle(self, wheel_angle):
-        if (wheel_angle - self.angle) > 0.1:
-            wheel_angle = self.angle + 0.1
-        if (wheel_angle - self.angle) < -0.1:
-            wheel_angle = self.angle - 0.1
-        self.angle = max(min(wheel_angle, 0.5), -0.5)
+    def update_display(self):
+        speed = self.driver.getCurrentSpeed()
+        steering_angle = self.driver.getSteeringAngle()
+        speed_label_str = "Speed: "
+        speed_value_str = f"{speed:.2f} km/h"
+        steering_angle_label_str = "Steering Angle: "
+        steering_angle_value_str = f"{steering_angle:.5f} rad"
+        self.display.setColor(0x000000)
+        self.display.fillRectangle(0, 0, self.display.getWidth(), self.display.getHeight())
+        aquamarine = 0x7FFFD4
+        white = 0xFFFFFF
+        self.display.setColor(aquamarine)
+        self.display.drawText(speed_label_str, 5, 10)
+        self.display.drawText(steering_angle_label_str, 5, 30)
+        self.display.setColor(white)
+        self.display.drawText(speed_value_str, 50, 10)
+        self.display.drawText(steering_angle_value_str, 100, 30)
+
+    def set_steering_angle(self, value):
+        DEAD_ZONE = 0.06
+        value = value if abs(value) > DEAD_ZONE else 0.0
+        self.angle = self.MAX_ANGLE * value
 
     def set_speed(self, kmh):
         self.speed = kmh
+        self.driver.setCruisingSpeed(self.speed)
 
     def update(self):
+        self.update_display()
         self.driver.setSteeringAngle(self.angle)
         self.driver.setCruisingSpeed(self.speed)
 
     def get_image(self):
         raw_image = self.camera.getImage()
-        return np.frombuffer(raw_image, np.uint8).reshape(
-            (self.camera.getHeight(), self.camera.getWidth(), 4)
-        )
-
-    def get_obj_areas(self):
-        num_obj = self.front_camera.getRecognitionNumberOfObjects()
-        areas = []
-        for i in range(num_obj):
-            obj = self.front_camera.getRecognitionObjects()[i]
-            id = obj.getId()
-            sizes = obj.getSize()
-            area = abs(sizes[0] * sizes[1])
-            if area < 50.0:
-                areas.append(area)
-        return areas
+        image = np.frombuffer(raw_image, np.uint8).reshape((self.camera.getHeight(), self.camera.getWidth(), 4))
+        image = cv2.resize(image, (200, 66))
+        image = image[35:, :, :]
+        image = cv2.resize(image, (200, 66))
+        image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+        return image
 
     def get_lid_ranges(self):
         range_image = self.lidar.getRangeImage()
@@ -103,7 +117,6 @@ class CarEngine:
         mean_range = np.mean(ranges)
         min_range = min(ranges) if ranges else float('inf')
         print(f'Num Lasers: {num_lasers}')
-
         detection = None
         if num_lasers == 0:
             print("Detected: None")
@@ -113,45 +126,47 @@ class CarEngine:
         else:
             detection = "Car"
             print("Detected: Car")
-
         return mean_range, num_lasers, min_range, detection
 
 
-def main_loop(car, controller):
+def main_loop(car, model, controller):
     try:
+        TIMER = 30
+        COUNTER = 0
+        predicted_steering_angle = 0.0
         while car.robot.step() != -1:
+            if COUNTER == TIMER:
+                image = car.get_image()
+                preprocessed_image = np.array([image])
+                predicted_steering_angle = model.predict(preprocessed_image)[0][0]
+                print(f"Predicted steering angle: {predicted_steering_angle}")
+                COUNTER = 0
+                car.set_steering_angle(predicted_steering_angle)
+                dist, num_lasers, min_range, detection = car.get_lid_ranges()
+                if detection == "Pedestrian":
+                    car.set_speed(0)
+                elif detection == "Car":
+                    if min_range < THRESHOLD_DISTANCE_CAR:
+                        car.set_speed(0)
+                    else:
+                        car.set_speed(CAR_SPEED)
+                else:
+                    car.set_speed(CAR_SPEED)
+                car.update()
+            COUNTER += 1
             if USE_CONTROLLER:
                 pygame.event.pump()
-
                 if controller.button_pressed(0):
                     break
-
-            areas_detec = car.get_obj_areas()
-            print(f"Areas: {areas_detec}")
-
-            dist, num_lasers, min_range, detection = car.get_lid_ranges()
-
-            if detection == "Pedestrian":
-                car.set_speed(0)  # Stop if a pedestrian is detected
-            elif detection == "Car":
-                if min_range < THRESHOLD_DISTANCE_CAR:
-                    car.set_speed(0)  # Stop if the detected car is too close
-                else:
-                    car.set_speed(CAR_SPEED)  # Set to a lower speed or desired speed if the distance is safe
-            else:
-                car.set_speed(CAR_SPEED)  # Default speed when no object is detected
-
-            axis_steering = controller.get_axis(0)
-
-            car.set_steering_angle(axis_steering)
-            car.update()
-
     finally:
         if USE_CONTROLLER:
             pygame.quit()
+        print("Exiting the main loop.")
 
 
 if __name__ == "__main__":
     car = CarEngine()
     controller = Controller()
-    main_loop(car, controller)
+    model = load_model('../models/behavioral_cloning.keras')
+    model.compile(Adam(learning_rate=0.001), loss='mse')
+    main_loop(car, model, controller)
