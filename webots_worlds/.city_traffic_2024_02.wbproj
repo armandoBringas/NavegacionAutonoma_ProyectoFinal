@@ -7,6 +7,6 @@ centralWidgetVisible: 1
 orthographicViewHeight: 1
 textFiles: -1
 consoles: Console:All:All
-renderingDevicePerspectives: vehicle:Front Camera;1;1;0;0
-renderingDevicePerspectives: vehicle:camera;1;1;0;0
-renderingDevicePerspectives: vehicle:display;1;1;0;0
+renderingDevicePerspectives: vehicle:Front Camera;1;1;0.0129771;0.015948
+renderingDevicePerspectives: vehicle:camera;1;1;0.134351;0.015948
+renderingDevicePerspectives: vehicle:display;1;1;0.0160305;0.126403

@@ -26,6 +26,8 @@ class Controller:
 
 
 class CarEngine:
+    THRESHOLD_DISTANCE_CAR = 5.0  # Example threshold distance for car detection in meters
+
     def __init__(self):
         self.robot = Car()
         self.driver = Driver()
@@ -76,31 +78,35 @@ class CarEngine:
 
     def get_obj_areas(self):
         num_obj = self.front_camera.getRecognitionNumberOfObjects()
-        # print("="*46)
-        # print("Num objects: ",num_obj)
         areas = []
         for i in range(num_obj):
             obj = self.front_camera.getRecognitionObjects()[i]
             id = obj.getId()
             sizes = obj.getSize()
             area = abs(sizes[0] * sizes[1])
-            # print(id)
-            # print(f"Alto: {sizes[0]}")
-            # print(f"Ancho: {sizes[1]}")
-            # print(f"Area: {area}" )
             if area < 50.0:
                 areas.append(area)
         return areas
 
     def get_lid_ranges(self):
         range_image = self.lidar.getRangeImage()
-
-        ranges = [val for val in range_image if np.isinf(val) != True]
+        ranges = [val for val in range_image if not np.isinf(val)]
         num_lasers = len(ranges)
         mean_range = np.mean(ranges)
-        # print(mean_range)
-        # print(f'Num Lasers: {len(ranges)}')
-        return mean_range, num_lasers
+        min_range = min(ranges) if ranges else float('inf')
+        print(f'Num Lasers: {num_lasers}')
+
+        detection = None
+        if num_lasers == 0:
+            print("Detected: None")
+        elif num_lasers < 150:
+            detection = "Pedestrian"
+            print("Detected: Pedestrian")
+        else:
+            detection = "Car"
+            print("Detected: Car")
+
+        return mean_range, num_lasers, min_range, detection
 
 
 def main_loop(car, controller):
@@ -111,18 +117,24 @@ def main_loop(car, controller):
             if controller.button_pressed(0):
                 break
 
-            # car.sensor_detection()
             areas_detec = car.get_obj_areas()
-
             print(f"Areas: {areas_detec}")
-            dist, num_lasers = car.get_lid_ranges()
-            # print(f"Range: {proximity}")
+
+            dist, num_lasers, min_range, detection = car.get_lid_ranges()
+
+            if detection == "Pedestrian":
+                car.set_speed(0)  # Stop if a pedestrian is detected
+            elif detection == "Car":
+                if min_range < CarEngine.THRESHOLD_DISTANCE_CAR:
+                    car.set_speed(0)  # Stop if the detected car is too close
+                else:
+                    car.set_speed(10)  # Set to a lower speed or desired speed if the distance is safe
+            else:
+                car.set_speed(10)  # Default speed when no object is detected
 
             axis_steering = controller.get_axis(0)
-            axis_speed = controller.get_axis(1)
 
             car.set_steering_angle(axis_steering)
-            car.set_speed(0)
             car.update()
 
     finally:
