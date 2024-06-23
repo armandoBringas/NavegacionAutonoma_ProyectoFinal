@@ -22,12 +22,13 @@ NavegacionAutonoma_ProyectoFinal/
 ├── notebooks/
 │   └── behavioral_cloning_training.ipynb
 │
+├── report/
+│   
 ├── scripts/
 │   ├── behavioral_cloning_and_sensors_driving.py
 │   ├── capture_controller_input.py
 │   └── create_report.py
 │   
-│
 ├── webots_worlds/
 │   ├── city_traffic_2024_02_net/
 │   ├── city_traffic_2024_01.wbt
@@ -51,6 +52,8 @@ NavegacionAutonoma_ProyectoFinal/
 
 - **notebooks/**: Contiene cuadernos de Jupyter.
   - **behavioral_cloning_training.ipynb**: Cuaderno para entrenar el modelo de clonación de comportamiento.
+  
+- **report/**: Contiene script para generar el reporte final.
 
 - **scripts/**: Contiene scripts de Python.
   - **behavioral_cloning_and_sensors_driving.py**: Script combinado para clonación de comportamiento y conducción con datos de sensores.
