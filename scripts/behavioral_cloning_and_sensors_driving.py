@@ -7,27 +7,35 @@ import pygame
 from controller import Robot, Camera, GPS, LidarPoint
 from vehicle import Car, Driver
 
+# Constants
+THRESHOLD_DISTANCE_CAR = 5.0  # Threshold distance for car detection in meters
+CAR_SPEED = 10  # Speed in km/h when no object is detected or safe distance from car
+USE_CONTROLLER = False  # Option to enable or disable the use of video game controller
+
 
 class Controller:
     DEAD_ZONE = 0.1
 
     def __init__(self):
-        pygame.init()
-        pygame.joystick.init()
-        self.joystick = pygame.joystick.Joystick(0)
-        self.joystick.init()
+        if USE_CONTROLLER:
+            pygame.init()
+            pygame.joystick.init()
+            self.joystick = pygame.joystick.Joystick(0)
+            self.joystick.init()
 
     def get_axis(self, axis):
-        value = self.joystick.get_axis(axis)
-        return 0 if abs(value) < self.DEAD_ZONE else value
+        if USE_CONTROLLER:
+            value = self.joystick.get_axis(axis)
+            return 0 if abs(value) < self.DEAD_ZONE else value
+        return 0
 
     def button_pressed(self, button):
-        return self.joystick.get_button(button)
+        if USE_CONTROLLER:
+            return self.joystick.get_button(button)
+        return False
 
 
 class CarEngine:
-    THRESHOLD_DISTANCE_CAR = 5.0  # Example threshold distance for car detection in meters
-
     def __init__(self):
         self.robot = Car()
         self.driver = Driver()
@@ -112,10 +120,11 @@ class CarEngine:
 def main_loop(car, controller):
     try:
         while car.robot.step() != -1:
-            pygame.event.pump()
+            if USE_CONTROLLER:
+                pygame.event.pump()
 
-            if controller.button_pressed(0):
-                break
+                if controller.button_pressed(0):
+                    break
 
             areas_detec = car.get_obj_areas()
             print(f"Areas: {areas_detec}")
@@ -125,12 +134,12 @@ def main_loop(car, controller):
             if detection == "Pedestrian":
                 car.set_speed(0)  # Stop if a pedestrian is detected
             elif detection == "Car":
-                if min_range < CarEngine.THRESHOLD_DISTANCE_CAR:
+                if min_range < THRESHOLD_DISTANCE_CAR:
                     car.set_speed(0)  # Stop if the detected car is too close
                 else:
-                    car.set_speed(10)  # Set to a lower speed or desired speed if the distance is safe
+                    car.set_speed(CAR_SPEED)  # Set to a lower speed or desired speed if the distance is safe
             else:
-                car.set_speed(10)  # Default speed when no object is detected
+                car.set_speed(CAR_SPEED)  # Default speed when no object is detected
 
             axis_steering = controller.get_axis(0)
 
@@ -138,7 +147,8 @@ def main_loop(car, controller):
             car.update()
 
     finally:
-        pygame.quit()
+        if USE_CONTROLLER:
+            pygame.quit()
 
 
 if __name__ == "__main__":
