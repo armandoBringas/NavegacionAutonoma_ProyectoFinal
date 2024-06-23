@@ -7,60 +7,6 @@ import pygame
 from controller import Robot, Camera, GPS, LidarPoint
 from vehicle import Car, Driver
 
-class file_handler:
-    def __init__(self, folder="train_images", csv_file="images.csv", save_images = True):
-        # Attributes
-        self.folder = folder
-        self.csv_file = csv_file
-        self.save_images = save_images
-        self._directory_exists()
-        self.last_row = self._get_last_row()
-        self.pic_num = 0 if self.last_row == 0 else self.last_row - 1
-        self.csv_writer = self._csv_writer()
-        self.csv_file_handler = open(self.csv_file, mode='a', newline='') if self.save_images is True else None
-        self.last_image = None
-
-    #Methods
-
-    def _directory_exists(self):
-        if self.save_images and not os.path.exists(self.folder):
-            os.makedirs(self.folder)
-    
-    def _get_last_row(self):
-        if not os.path.isfile(self.csv_file):
-            return 0
-        with open(self.csv_file, mode='r') as f:
-            last_row = 0
-            reader = csv.reader(f)
-            for last_row, _ in enumerate(reader,1):
-                pass
-            return last_row
-
-    def _csv_writer(self):
-        if self.save_images is False:
-            return None
-        csv_file = open(self.csv_file, mode='a', newline='')
-        csv_writer = csv.writer(csv_file)
-        if self._csv_exist_and_content() is False:
-            csv_writer.writerow(["Image Name", "Steering Angle"])
-        return csv_writer
-    
-    def _csv_exist_and_content(self):
-        return os.path.isfile(self.csv_file) and os.path.getsize(self.csv_file) > 0
-    
-    def write_path_image(self, steering_angle):
-        current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M")
-        file_name = os.path.join(self.folder, f"M-{current_datetime}-{self.pic_num}.png")
-        if file_name != self.last_image:
-            self.csv_writer.writerow([file_name, steering_angle])
-            print(f"Image saved: {file_name}, Steering angle: {steering_angle}")
-            self.last_image = file_name
-            self.pic_num += 1      
-
-    def flush_and_close(self):
-        if self.save_images is True:
-            self.csv_file_handler.flush()
-            self.csv_file_handler.close()
 
 class Controller:
     DEAD_ZONE = 0.1
@@ -77,6 +23,7 @@ class Controller:
 
     def button_pressed(self, button):
         return self.joystick.get_button(button)
+
 
 class CarEngine:
     def __init__(self):
@@ -129,31 +76,32 @@ class CarEngine:
 
     def get_obj_areas(self):
         num_obj = self.front_camera.getRecognitionNumberOfObjects()
-        #print("="*46)
-        #print("Num objects: ",num_obj)
+        # print("="*46)
+        # print("Num objects: ",num_obj)
         areas = []
         for i in range(num_obj):
             obj = self.front_camera.getRecognitionObjects()[i]
             id = obj.getId()
             sizes = obj.getSize()
             area = abs(sizes[0] * sizes[1])
-            #print(id)
-            #print(f"Alto: {sizes[0]}")
-            #print(f"Ancho: {sizes[1]}")
-            #print(f"Area: {area}" )
+            # print(id)
+            # print(f"Alto: {sizes[0]}")
+            # print(f"Ancho: {sizes[1]}")
+            # print(f"Area: {area}" )
             if area < 50.0:
                 areas.append(area)
         return areas
 
     def get_lid_ranges(self):
         range_image = self.lidar.getRangeImage()
-        
+
         ranges = [val for val in range_image if np.isinf(val) != True]
         num_lasers = len(ranges)
         mean_range = np.mean(ranges)
-        #print(mean_range)
-        #print(f'Num Lasers: {len(ranges)}')
-        return mean_range,  num_lasers
+        # print(mean_range)
+        # print(f'Num Lasers: {len(ranges)}')
+        return mean_range, num_lasers
+
 
 def main_loop(car, controller):
     try:
@@ -162,13 +110,13 @@ def main_loop(car, controller):
 
             if controller.button_pressed(0):
                 break
-            
-            #car.sensor_detection()
+
+            # car.sensor_detection()
             areas_detec = car.get_obj_areas()
-            
+
             print(f"Areas: {areas_detec}")
             dist, num_lasers = car.get_lid_ranges()
-            #print(f"Range: {proximity}")
+            # print(f"Range: {proximity}")
 
             axis_steering = controller.get_axis(0)
             axis_speed = controller.get_axis(1)
@@ -178,8 +126,8 @@ def main_loop(car, controller):
             car.update()
 
     finally:
-        #file_handler.flush_and_close()
         pygame.quit()
+
 
 if __name__ == "__main__":
     car = CarEngine()
